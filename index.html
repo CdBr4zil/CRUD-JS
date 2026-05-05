@@ -1,10 +1,81 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="pt-br">
+
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Document</title>
 </head>
+
 <body>
+    <p>Adicione sua tarefa</p>
+    <input id="input" type="text" placeholder="Digite algo..." />
+    <button id="saveButton" onclick="saveDate()">Salvar</button>
+
+    <br />
+    <p>Tarefas a fazer:</p>
+    <div id="update"></div>
+    <div>
+        <ul id="results"></ul>
+    </div>
+
+    <script>
+        
+        let listaDeTarefas = [];
+        let index = 0;
+        
+        //CREATE
+        function saveDate() {
+            let entrada = document.getElementById("input");
+            let inputValue = {
+                id: index,
+                texto: entrada.value,
+            };
+            index++;
+            listaDeTarefas.push(inputValue);
+            showDate();
+        }
+
+        //READ
+        function showDate() {
+            let ul = document.getElementById("results");
+            let html = "";
+            listaDeTarefas.forEach((elemento) => {
+                html += `<li> 
+                    ${elemento.texto}
+                    <button onclick="update(${elemento.id})">Editar</button> 
+                    <button onclick="deleteDate(${elemento.id})">Deletar</button>
+                    </li>`;
+            });
+            ul.innerHTML = html;
+        }
+
+        //UPDATE
+        function update(id) {
+
+            let html =
+                `<input id="updateInput" type="text" placeholder="Digite aqui..." />
+            <button id="updateButton" onclick="updateDate(${id})">Atualizar</button>`
+            let divupdate = document.getElementById("update");
+            divupdate.innerHTML = html;
+        }
+
+        function updateDate(id) {
+            let inputUpdate = document.getElementById("updateInput").value;
+            let tarefa = listaDeTarefas.find(obj => obj.id === id);
+            tarefa.texto = inputUpdate;
+            showDate();
+            let divupdate = document.getElementById("update");
+            divupdate.innerHTML = "";
+        }
+
+        //DELETE
+        function deleteDate(id) {
+            let index = listaDeTarefas.findIndex(obj => obj.id === id);
+            listaDeTarefas.splice(index, 1);
+            showDate();
+        }
+    </script>
 </body>
+
 </html>
