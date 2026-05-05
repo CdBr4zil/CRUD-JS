@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Clube Recreativo - Painel</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <h2 class="logo">Clube<span>Recreativo</span></h2>
+      <p class="menu-title">MÓDULOS</p>
+      <nav class="menu">
+        <button class="menu-item active" data-module="socios">Sócios</button>
+        <button class="menu-item" data-module="espacos">Espaços</button>
+        <button class="menu-item" data-module="aulas">Aulas</button>
+        <button class="menu-item" data-module="consumo">Consumo</button>
+      </nav>
+    </aside>
+
+    <div class="main-area">
+      <header class="topbar">
+        <div>
+          <h1 id="page-title">Sócios</h1>
+          <p class="page-subtitle">Painel administrativo do clube</p>
+        </div>
+        <div class="user-pill">CR</div>
+      </header>
+
+      <section class="card">
+        <div class="card-header">
+          <h3 id="form-title">Cadastro de Sócios</h3>
+        </div>
+        <form id="dynamic-form" class="form-grid"></form>
+      </section>
+
+      <section class="card">
+        <div class="card-header card-header-space">
+          <h3>Listagem</h3>
+          <input id="search-input" type="text" placeholder="Buscar na tabela..." />
+        </div>
+
+        <div class="table-scroll">
+          <table>
+            <thead>
+              <tr>
+                <th style="width: 70px">ID</th>
+                <th id="col-1"></th>
+                <th id="col-2"></th>
+                <th id="col-3"></th>
+                <th style="width: 180px">Ações</th>
+              </tr>
+            </thead>
+            <tbody id="dynamic-list"></tbody>
+          </table>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
