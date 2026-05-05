@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Clube Recreativo - CRUD</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="app-layout">
+    <aside class="sidebar">
+      <div class="brand">Clube<span>Recreativo</span></div>
+      <nav class="menu">
+        <button class="menu-btn active" data-module="socios">Sócios</button>
+        <button class="menu-btn" data-module="espacos">Espaços</button>
+        <button class="menu-btn" data-module="aulas">Aulas</button>
+        <button class="menu-btn" data-module="consumo">Consumo</button>
+      </nav>
+    </aside>
+
+    <main class="content">
+      <header class="topbar">
+        <h1 id="page-title">Sócios</h1>
+        <p class="subtitle">Gerencie os dados do clube em um painel simples</p>
+      </header>
+
+      <section class="panel">
+        <div class="panel-header">
+          <h2 id="panel-title">Cadastro de Sócios</h2>
+        </div>
+
+        <form id="dynamic-form" class="grid-form"></form>
+      </section>
+
+      <section class="panel">
+        <div class="panel-header">
+          <h2>Lista</h2>
+        </div>
+        <div class="table-wrapper">
+          <table>
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th id="col-1">Campo 1</th>
+                <th id="col-2">Campo 2</th>
+                <th id="col-3">Campo 3</th>
+                <th>Ações</th>
+              </tr>
+            </thead>
+            <tbody id="dynamic-list"></tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
