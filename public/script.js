@@ -1,121 +1,162 @@
-// Configuração dos módulos e campos
 const modules = {
-  socios: ['nome', 'email', 'telefone'],
-  aulas: ['nome', 'instrutor', 'horario'],
-  consumo: ['socio_nome', 'item', 'valor'],
-  espacos: ['nome', 'capacidade', 'status']
+  socios: {
+    label: 'Sócios',
+    fields: [
+      { name: 'nome', placeholder: 'Nome' },
+      { name: 'email', placeholder: 'E-mail' },
+      { name: 'telefone', placeholder: 'Telefone' }
+    ]
+  },
+  espacos: {
+    label: 'Espaços',
+    fields: [
+      { name: 'nome', placeholder: 'Nome do espaço' },
+      { name: 'capacidade', placeholder: 'Capacidade' },
+      { name: 'status', placeholder: 'Status (Livre/Ocupado)' }
+    ]
+  },
+  aulas: {
+    label: 'Aulas',
+    fields: [
+      { name: 'nome', placeholder: 'Nome da aula' },
+      { name: 'instrutor', placeholder: 'Instrutor' },
+      { name: 'horario', placeholder: 'Horário' }
+    ]
+  },
+  consumo: {
+    label: 'Consumo',
+    fields: [
+      { name: 'socio_nome', placeholder: 'Nome do sócio' },
+      { name: 'item', placeholder: 'Item consumido' },
+      { name: 'valor', placeholder: 'Valor' }
+    ]
+  }
 };
 
-// Inicializa formulários e listas
-Object.keys(modules).forEach((moduleName) => {
-  const form = document.getElementById(`form-${moduleName}`);
+let currentModule = 'socios';
+let currentItems = [];
 
-  form.addEventListener('submit', async (event) => {
+const pageTitle = document.getElementById('page-title');
+const formTitle = document.getElementById('form-title');
+const form = document.getElementById('dynamic-form');
+const list = document.getElementById('dynamic-list');
+const searchInput = document.getElementById('search-input');
+
+init();
+
+function init() {
+  bindMenu();
+  searchInput.addEventListener('input', renderTable);
+  setupModule('socios');
+}
+
+function bindMenu() {
+  document.querySelectorAll('.menu-item').forEach((button) => {
+    button.addEventListener('click', () => {
+      document.querySelectorAll('.menu-item').forEach((b) => b.classList.remove('active'));
+      button.classList.add('active');
+      setupModule(button.dataset.module);
+    });
+  });
+}
+
+function setupModule(moduleName) {
+  currentModule = moduleName;
+  const config = modules[moduleName];
+
+  pageTitle.textContent = config.label;
+  formTitle.textContent = `Cadastro de ${config.label}`;
+  document.getElementById('col-1').textContent = config.fields[0].placeholder;
+  document.getElementById('col-2').textContent = config.fields[1].placeholder;
+  document.getElementById('col-3').textContent = config.fields[2].placeholder;
+
+  renderForm();
+  fetchList();
+}
+
+function renderForm() {
+  const config = modules[currentModule];
+
+  form.innerHTML = `
+    <input type="hidden" name="id" />
+    ${config.fields.map((f) => `<input name="${f.name}" placeholder="${f.placeholder}" required />`).join('')}
+    <button class="btn btn-primary" type="submit">Salvar</button>
+    <button class="btn btn-secondary" id="cancel-btn" type="button">Cancelar</button>
+  `;
+
+  form.onsubmit = async (event) => {
     event.preventDefault();
 
-    const formData = new FormData(form);
-    const id = formData.get('id');
+    const data = new FormData(form);
+    const id = data.get('id');
     const payload = {};
 
-    modules[moduleName].forEach((field) => {
-      payload[field] = formData.get(field);
+    config.fields.forEach((field) => {
+      payload[field.name] = data.get(field.name);
     });
 
     if (id) {
-      await updateItem(moduleName, id, payload);
+      await fetch(`/api/${currentModule}/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
     } else {
-      await createItem(moduleName, payload);
+      await fetch(`/api/${currentModule}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
     }
 
     form.reset();
-    renderList(moduleName);
-  });
+    form.querySelector('input[name="id"]').value = '';
+    fetchList();
+  };
 
-  renderList(moduleName);
-});
-
-// CREATE
-async function createItem(moduleName, data) {
-  await fetch(`/api/${moduleName}`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(data)
-  });
+  document.getElementById('cancel-btn').onclick = () => {
+    form.reset();
+    form.querySelector('input[name="id"]').value = '';
+  };
 }
 
-// READ + montagem da lista
-async function renderList(moduleName) {
-  const response = await fetch(`/api/${moduleName}`);
-  const items = await response.json();
-  const list = document.getElementById(`lista-${moduleName}`);
-
-  list.innerHTML = '';
-
-  items.forEach((item) => {
-    const li = document.createElement('li');
-
-    const texto = document.createElement('span');
-    texto.textContent = formatItem(moduleName, item);
-
-    const acoes = document.createElement('div');
-    acoes.className = 'acoes';
-
-    const btnEditar = document.createElement('button');
-    btnEditar.textContent = 'Editar';
-    btnEditar.onclick = () => fillForm(moduleName, item);
-
-    const btnExcluir = document.createElement('button');
-    btnExcluir.textContent = 'Excluir';
-    btnExcluir.onclick = async () => {
-      await deleteItem(moduleName, item.id);
-      renderList(moduleName);
-    };
-
-    acoes.appendChild(btnEditar);
-    acoes.appendChild(btnExcluir);
-
-    li.appendChild(texto);
-    li.appendChild(acoes);
-    list.appendChild(li);
-  });
+async function fetchList() {
+  const response = await fetch(`/api/${currentModule}`);
+  currentItems = await response.json();
+  renderTable();
 }
 
-// UPDATE
-async function updateItem(moduleName, id, data) {
-  await fetch(`/api/${moduleName}/${id}`, {
-    method: 'PUT',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(data)
+function renderTable() {
+  const query = searchInput.value.trim().toLowerCase();
+  const fields = modules[currentModule].fields.map((field) => field.name);
+
+  const filtered = currentItems.filter((item) => {
+    const text = fields.map((field) => String(item[field] ?? '')).join(' ').toLowerCase();
+    return text.includes(query) || String(item.id).includes(query);
   });
+
+  list.innerHTML = filtered.map((item) => `
+    <tr>
+      <td>${item.id}</td>
+      <td>${item[fields[0]]}</td>
+      <td>${item[fields[1]]}</td>
+      <td>${item[fields[2]]}</td>
+      <td>
+        <button class="btn btn-edit" onclick='editItem(${JSON.stringify(item)})'>Editar</button>
+        <button class="btn btn-delete" onclick='deleteItem(${item.id})'>Excluir</button>
+      </td>
+    </tr>
+  `).join('');
 }
 
-function fillForm(moduleName, item) {
-  const form = document.getElementById(`form-${moduleName}`);
+function editItem(item) {
   form.querySelector('input[name="id"]').value = item.id;
-
-  modules[moduleName].forEach((field) => {
-    form.querySelector(`input[name="${field}"]`).value = item[field];
+  modules[currentModule].fields.forEach((field) => {
+    form.querySelector(`input[name="${field.name}"]`).value = item[field.name];
   });
 }
 
-function cancelEdit(moduleName) {
-  const form = document.getElementById(`form-${moduleName}`);
-  form.reset();
-  form.querySelector('input[name="id"]').value = '';
-}
-
-// DELETE
-async function deleteItem(moduleName, id) {
-  await fetch(`/api/${moduleName}/${id}`, {
-    method: 'DELETE'
-  });
-}
-
-// Apenas para mostrar os dados de cada módulo de forma simples
-function formatItem(moduleName, item) {
-  if (moduleName === 'socios') return `#${item.id} | ${item.nome} | ${item.email} | ${item.telefone}`;
-  if (moduleName === 'aulas') return `#${item.id} | ${item.nome} | ${item.instrutor} | ${item.horario}`;
-  if (moduleName === 'consumo') return `#${item.id} | ${item.socio_nome} | ${item.item} | R$ ${item.valor}`;
-  if (moduleName === 'espacos') return `#${item.id} | ${item.nome} | Capacidade: ${item.capacidade} | ${item.status}`;
-  return '';
+async function deleteItem(id) {
+  await fetch(`/api/${currentModule}/${id}`, { method: 'DELETE' });
+  fetchList();
 }

@@ -3,63 +3,61 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>CRUD - Clube Recreativo</title>
+  <title>Clube Recreativo - Painel</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <h1>CRUD Simples - Clube Recreativo</h1>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <h2 class="logo">Clube<span>Recreativo</span></h2>
+      <p class="menu-title">MÓDULOS</p>
+      <nav class="menu">
+        <button class="menu-item active" data-module="socios">Sócios</button>
+        <button class="menu-item" data-module="espacos">Espaços</button>
+        <button class="menu-item" data-module="aulas">Aulas</button>
+        <button class="menu-item" data-module="consumo">Consumo</button>
+      </nav>
+    </aside>
 
-  <section class="modulo" id="modulo-socios">
-    <h2>Sócios</h2>
-    <form id="form-socios">
-      <input type="hidden" name="id" />
-      <input type="text" name="nome" placeholder="Nome" required />
-      <input type="email" name="email" placeholder="E-mail" required />
-      <input type="text" name="telefone" placeholder="Telefone" required />
-      <button type="submit">Salvar</button>
-      <button type="button" class="cancelar" onclick="cancelEdit('socios')">Cancelar edição</button>
-    </form>
-    <ul id="lista-socios"></ul>
-  </section>
+    <div class="main-area">
+      <header class="topbar">
+        <div>
+          <h1 id="page-title">Sócios</h1>
+          <p class="page-subtitle">Painel administrativo do clube</p>
+        </div>
+        <div class="user-pill">CR</div>
+      </header>
 
-  <section class="modulo" id="modulo-aulas">
-    <h2>Aulas</h2>
-    <form id="form-aulas">
-      <input type="hidden" name="id" />
-      <input type="text" name="nome" placeholder="Nome da aula" required />
-      <input type="text" name="instrutor" placeholder="Instrutor" required />
-      <input type="text" name="horario" placeholder="Horário" required />
-      <button type="submit">Salvar</button>
-      <button type="button" class="cancelar" onclick="cancelEdit('aulas')">Cancelar edição</button>
-    </form>
-    <ul id="lista-aulas"></ul>
-  </section>
+      <section class="card">
+        <div class="card-header">
+          <h3 id="form-title">Cadastro de Sócios</h3>
+        </div>
+        <form id="dynamic-form" class="form-grid"></form>
+      </section>
 
-  <section class="modulo" id="modulo-consumo">
-    <h2>Consumo</h2>
-    <form id="form-consumo">
-      <input type="hidden" name="id" />
-      <input type="text" name="socio_nome" placeholder="Nome do sócio" required />
-      <input type="text" name="item" placeholder="Item consumido" required />
-      <input type="number" step="0.01" name="valor" placeholder="Valor" required />
-      <button type="submit">Salvar</button>
-      <button type="button" class="cancelar" onclick="cancelEdit('consumo')">Cancelar edição</button>
-    </form>
-    <ul id="lista-consumo"></ul>
-  </section>
+      <section class="card">
+        <div class="card-header card-header-space">
+          <h3>Listagem</h3>
+          <input id="search-input" type="text" placeholder="Buscar na tabela..." />
+        </div>
 
-  <section class="modulo" id="modulo-espacos">
-    <h2>Espaços</h2>
-    <form id="form-espacos">
-      <input type="hidden" name="id" />
-      <input type="text" name="nome" placeholder="Nome do espaço" required />
-      <input type="number" name="capacidade" placeholder="Capacidade" required />
-      <input type="text" name="status" placeholder="Status (Livre/Ocupado)" required />
-      <button type="submit">Salvar</button>
-      <button type="button" class="cancelar" onclick="cancelEdit('espacos')">Cancelar edição</button>
-    </form>
-    <ul id="lista-espacos"></ul>
-  </section>
+        <div class="table-scroll">
+          <table>
+            <thead>
+              <tr>
+                <th style="width: 70px">ID</th>
+                <th id="col-1"></th>
+                <th id="col-2"></th>
+                <th id="col-3"></th>
+                <th style="width: 180px">Ações</th>
+              </tr>
+            </thead>
+            <tbody id="dynamic-list"></tbody>
+          </table>
+        </div>
+      </section>
+    </div>
+  </div>
 
   <script src="script.js"></script>
 </body>
