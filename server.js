@@ -18,6 +18,7 @@ function createTables() {
       CREATE TABLE IF NOT EXISTS socios (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         nome TEXT NOT NULL,
+        cpf TEXT NOT NULL,
         email TEXT NOT NULL,
         telefone TEXT NOT NULL
       )
@@ -28,6 +29,7 @@ function createTables() {
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         nome TEXT NOT NULL,
         instrutor TEXT NOT NULL,
+        espaco TEXT NOT NULL,
         horario TEXT NOT NULL
       )
     `);
@@ -35,9 +37,27 @@ function createTables() {
     db.run(`
       CREATE TABLE IF NOT EXISTS consumo (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
-        socio_nome TEXT NOT NULL,
+        socio_cpf TEXT NOT NULL,
         item TEXT NOT NULL,
+        quantidade INTEGER NOT NULL
+      )
+    `);
+
+
+    db.run(`
+      CREATE TABLE IF NOT EXISTS itens_consumo (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        nome TEXT NOT NULL,
         valor REAL NOT NULL
+      )
+    `);
+
+    db.run(`
+      CREATE TABLE IF NOT EXISTS instrutores (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        nome TEXT NOT NULL,
+        cpf TEXT NOT NULL,
+        telefone TEXT NOT NULL
       )
     `);
 
@@ -49,6 +69,57 @@ function createTables() {
         status TEXT NOT NULL
       )
     `);
+  });
+}
+
+
+
+// Garante compatibilidade para bases antigas sem a coluna CPF.
+function ensureSociosCpfColumn() {
+  db.all('PRAGMA table_info(socios)', [], (err, columns) => {
+    if (err) return;
+    const hasCpf = columns.some((column) => column.name === 'cpf');
+    if (!hasCpf) {
+      db.run("ALTER TABLE socios ADD COLUMN cpf TEXT NOT NULL DEFAULT ''");
+    }
+  });
+}
+
+
+
+function ensureAulasEspacoColumn() {
+  db.all('PRAGMA table_info(aulas)', [], (err, columns) => {
+    if (err) return;
+    const hasEspaco = columns.some((column) => column.name === 'espaco');
+    if (!hasEspaco) {
+      db.run("ALTER TABLE aulas ADD COLUMN espaco TEXT NOT NULL DEFAULT ''");
+    }
+  });
+}
+
+
+function ensureInstrutoresCpfColumn() {
+  db.all('PRAGMA table_info(instrutores)', [], (err, columns) => {
+    if (err) return;
+    const hasCpf = columns.some((column) => column.name === 'cpf');
+    if (!hasCpf) db.run("ALTER TABLE instrutores ADD COLUMN cpf TEXT NOT NULL DEFAULT ''");
+  });
+}
+
+function ensureConsumoSocioCpfColumn() {
+  db.all('PRAGMA table_info(consumo)', [], (err, columns) => {
+    if (err) return;
+    const hasSocioCpf = columns.some((column) => column.name === 'socio_cpf');
+    if (!hasSocioCpf) db.run("ALTER TABLE consumo ADD COLUMN socio_cpf TEXT NOT NULL DEFAULT ''");
+  });
+}
+
+
+function ensureConsumoQuantidadeColumn() {
+  db.all('PRAGMA table_info(consumo)', [], (err, columns) => {
+    if (err) return;
+    const hasQuantidade = columns.some((column) => column.name === 'quantidade');
+    if (!hasQuantidade) db.run("ALTER TABLE consumo ADD COLUMN quantidade INTEGER NOT NULL DEFAULT 1");
   });
 }
 
@@ -114,10 +185,103 @@ function createCrudRoutes(moduleName, tableName, fields) {
 }
 
 createTables();
+ensureSociosCpfColumn();
+ensureAulasEspacoColumn();
+ensureInstrutoresCpfColumn();
+ensureConsumoSocioCpfColumn();
+ensureConsumoQuantidadeColumn();
 
-createCrudRoutes('socios', 'socios', ['nome', 'email', 'telefone']);
-createCrudRoutes('aulas', 'aulas', ['nome', 'instrutor', 'horario']);
-createCrudRoutes('consumo', 'consumo', ['socio_nome', 'item', 'valor']);
+createCrudRoutes('socios', 'socios', ['nome', 'cpf', 'email', 'telefone']);
+createCrudRoutes('aulas', 'aulas', ['nome', 'instrutor', 'espaco', 'horario']);
+
+function getConsumoColumns(callback) {
+  db.all('PRAGMA table_info(consumo)', [], (err, columns) => {
+    if (err) return callback(err);
+    callback(null, columns.map((c) => c.name));
+  });
+}
+
+app.post('/api/consumo', (req, res) => {
+  const { socio_cpf, item, quantidade } = req.body;
+  if (!socio_cpf || !item || quantidade === undefined || quantidade === '') {
+    return res.status(400).json({ error: 'Preencha todos os campos.' });
+  }
+
+  getConsumoColumns((err, columns) => {
+    if (err) return res.status(500).json({ error: err.message });
+
+    const fields = ['socio_cpf', 'item', 'quantidade'];
+    const values = [socio_cpf, item, quantidade];
+
+    if (columns.includes('socio_nome')) {
+      fields.push('socio_nome');
+      values.push(socio_cpf);
+    }
+
+    if (columns.includes('valor')) {
+      fields.push('valor');
+      values.push(quantidade);
+    }
+
+    const placeholders = fields.map(() => '?').join(', ');
+    const sql = `INSERT INTO consumo (${fields.join(', ')}) VALUES (${placeholders})`;
+
+    db.run(sql, values, function (runErr) {
+      if (runErr) return res.status(500).json({ error: runErr.message });
+      res.status(201).json({ id: this.lastID, socio_cpf, item, quantidade });
+    });
+  });
+});
+
+app.get('/api/consumo', (req, res) => {
+  db.all('SELECT * FROM consumo ORDER BY id DESC', [], (err, rows) => {
+    if (err) return res.status(500).json({ error: err.message });
+    res.json(rows);
+  });
+});
+
+app.put('/api/consumo/:id', (req, res) => {
+  const { id } = req.params;
+  const { socio_cpf, item, quantidade } = req.body;
+  if (!socio_cpf || !item || quantidade === undefined || quantidade === '') {
+    return res.status(400).json({ error: 'Preencha todos os campos.' });
+  }
+
+  getConsumoColumns((err, columns) => {
+    if (err) return res.status(500).json({ error: err.message });
+
+    const sets = ['socio_cpf = ?', 'item = ?', 'quantidade = ?'];
+    const values = [socio_cpf, item, quantidade];
+
+    if (columns.includes('socio_nome')) {
+      sets.push('socio_nome = ?');
+      values.push(socio_cpf);
+    }
+
+    if (columns.includes('valor')) {
+      sets.push('valor = ?');
+      values.push(quantidade);
+    }
+
+    const sql = `UPDATE consumo SET ${sets.join(', ')} WHERE id = ?`;
+    db.run(sql, [...values, id], function (runErr) {
+      if (runErr) return res.status(500).json({ error: runErr.message });
+      if (this.changes === 0) return res.status(404).json({ error: 'Registro não encontrado.' });
+      res.json({ id: Number(id), socio_cpf, item, quantidade });
+    });
+  });
+});
+
+app.delete('/api/consumo/:id', (req, res) => {
+  db.run('DELETE FROM consumo WHERE id = ?', [req.params.id], function (err) {
+    if (err) return res.status(500).json({ error: err.message });
+    if (this.changes === 0) return res.status(404).json({ error: 'Registro não encontrado.' });
+    res.json({ message: 'Registro removido com sucesso.' });
+  });
+});
+
+createCrudRoutes('itens_consumo', 'itens_consumo', ['nome', 'valor']);
+createCrudRoutes('instrutores', 'instrutores', ['nome', 'cpf', 'telefone']);
 createCrudRoutes('espacos', 'espacos', ['nome', 'capacidade', 'status']);
 
 app.listen(PORT, () => {
