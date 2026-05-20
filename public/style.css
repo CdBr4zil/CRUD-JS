@@ -101,8 +101,7 @@ body {
   gap: 10px;
 }
 
-.form-grid input,
-.form-grid select {
+.form-grid input {
   border: 1px solid #cad2ea;
   border-radius: 6px;
   padding: 10px;
