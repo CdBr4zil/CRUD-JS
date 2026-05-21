@@ -56,10 +56,3 @@ Acesse em: [http://localhost:3000](http://localhost:3000)
 > `:modulo` pode ser `socios`, `espacos`, `aulas` ou `consumo`.
 
 ---
-
-## 👨‍💻 Autor
-
-Desenvolvido por **Caio Dias**
-
-[![LinkedIn](https://img.shields.io/badge/LinkedIn-Caio%20Dias-blue?logo=linkedin)](https://www.linkedin.com/in/caio-dias2004/)
-[![GitHub](https://img.shields.io/badge/GitHub-CdBr4zil-black?logo=github)](https://github.com/CdBr4zil)
